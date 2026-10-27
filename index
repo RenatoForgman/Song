@@ -1,0 +1,559 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#101114">
+<title>Renato Music Player</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #101114;
+  color: #f5f5f7;
+  font-family: Arial, sans-serif;
+}
+
+.player {
+  width: 100%;
+  max-width: 420px;
+  padding: 24px;
+  border: 1px solid #30313b;
+  border-radius: 25px;
+  background: linear-gradient(145deg, #22232a, #151519);
+  box-shadow: 0 20px 60px #0008;
+  text-align: center;
+}
+
+.logo {
+  width: 115px;
+  height: 115px;
+  margin: 5px auto 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #c3a9ff, #6446a7);
+  color: #17121f;
+  font-size: 52px;
+  box-shadow: 0 0 35px #a78bfa35;
+}
+
+h1 {
+  font-size: 23px;
+  margin: 0 0 12px;
+}
+
+#trackName {
+  font-size: 15px;
+  font-weight: bold;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+
+#status {
+  font-size: 12px;
+  color: #aaa;
+  margin-top: 8px;
+  min-height: 32px;
+  line-height: 1.5;
+}
+
+.tracklist {
+  margin: 20px 0;
+  text-align: left;
+}
+
+.track {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px;
+  margin: 8px 0;
+  border: 1px solid #35353e;
+  border-radius: 12px;
+  background: #25252c;
+  color: #eee;
+  text-align: left;
+  cursor: pointer;
+}
+
+.track.active {
+  border-color: #bba2ff;
+  background: #332b46;
+}
+
+.number {
+  color: #bba2ff;
+  font-weight: bold;
+  min-width: 22px;
+}
+
+.track-title {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+}
+
+.track.active .track-title {
+  color: #d9caff;
+}
+
+.timeline {
+  width: 100%;
+  accent-color: #bba2ff;
+  cursor: pointer;
+}
+
+.times {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #aaa;
+  margin: 9px 0 18px;
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.ctrl {
+  border: 0;
+  background: transparent;
+  color: #eee;
+  font-size: 22px;
+  padding: 8px 4px;
+  cursor: pointer;
+}
+
+.ctrl.active {
+  color: #c3a9ff;
+}
+
+.play {
+  width: 62px;
+  height: 62px;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #c3a9ff;
+  color: #17121f;
+  font-size: 26px;
+  cursor: pointer;
+}
+
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 9px;
+}
+
+.option {
+  padding: 10px 12px;
+  border: 1px solid #41414c;
+  border-radius: 20px;
+  background: #25252c;
+  color: #eee;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.option.active {
+  background: #c3a9ff;
+  color: #17121f;
+}
+
+.volume {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 24px;
+  color: #ccc;
+}
+
+.volume input {
+  flex: 1;
+  min-width: 0;
+  accent-color: #bba2ff;
+}
+
+.note {
+  font-size: 11px;
+  color: #858591;
+  margin-top: 22px;
+  line-height: 1.5;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid #c3a9ff;
+  outline-offset: 3px;
+}
+</style>
+</head>
+
+<body>
+<main class="player">
+
+  <div class="logo">♫</div>
+
+  <h1>Renato Music Player</h1>
+
+  <div id="trackName">Escolha uma música</div>
+
+  <div id="status" role="status" aria-live="polite">
+    Sua playlist está pronta.
+  </div>
+
+  <section class="tracklist" id="tracklist"
+           aria-label="Playlist"></section>
+
+  <audio id="audio" preload="metadata"></audio>
+
+  <input
+    class="timeline"
+    id="progress"
+    type="range"
+    min="0"
+    max="100"
+    step="0.1"
+    value="0"
+    aria-label="Progresso do áudio">
+
+  <div class="times">
+    <span id="current">00:00</span>
+    <span id="duration">00:00</span>
+  </div>
+
+  <div class="controls">
+    <button class="ctrl" id="shuffle"
+      title="Aleatório" aria-label="Modo aleatório">🔀</button>
+
+    <button class="ctrl" id="prev"
+      title="Anterior" aria-label="Faixa anterior">⏮</button>
+
+    <button class="play" id="play"
+      title="Reproduzir" aria-label="Reproduzir">▶</button>
+
+    <button class="ctrl" id="next"
+      title="Próxima" aria-label="Próxima faixa">⏭</button>
+
+    <button class="ctrl" id="repeat"
+      title="Repetir faixa" aria-label="Repetir faixa">🔁</button>
+  </div>
+
+  <div class="options">
+    <button class="option active" id="continuous">
+      ↻ Lista contínua
+    </button>
+
+    <button class="option" id="repeatOne">
+      🔂 Repetir faixa
+    </button>
+  </div>
+
+  <div class="volume">
+    <span>🔈</span>
+    <input id="volume" type="range"
+      min="0" max="1" step="0.01"
+      value="0.8" aria-label="Volume">
+    <span>🔊</span>
+  </div>
+
+  <div class="note">
+    HTML5 Audio · 3 faixas · GitHub Raw
+  </div>
+
+</main>
+
+<script>
+"use strict";
+
+/* SOMENTE AS TRÊS MÚSICAS SOLICITADAS */
+const tracks = [
+  {
+    name: "Flaming Lake (2).m4a",
+    url: "https://raw.githubusercontent.com/RenatoForgman/Song/main/Flaming%20Lake%20%20(2).m4a"
+  },
+  {
+    name: "Best Girl (The Mass and the Fera).mp3",
+    url: "https://raw.githubusercontent.com/RenatoForgman/Song/main/Best%20Girl%20(The%20Mass%20and%20the%20Fera).mp3"
+  },
+  {
+    name: "Opera 3 (1).mp3",
+    url: "https://raw.githubusercontent.com/RenatoForgman/Song/main/Opera%203%20(1).mp3"
+  }
+];
+
+const audio = document.getElementById("audio");
+const nameEl = document.getElementById("trackName");
+const statusEl = document.getElementById("status");
+const playBtn = document.getElementById("play");
+const progress = document.getElementById("progress");
+const currentEl = document.getElementById("current");
+const durationEl = document.getElementById("duration");
+const tracklist = document.getElementById("tracklist");
+
+let index = 0;
+let shuffle = false;
+let repeatOne = false;
+let continuous = true;
+let previousIndex = -1;
+let playRequest = 0;
+
+function formatTime(seconds) {
+  if (!Number.isFinite(seconds) || seconds < 0) {
+    return "00:00";
+  }
+
+  const minutes = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+
+  return String(minutes).padStart(2, "0") + ":" +
+         String(secs).padStart(2, "0");
+}
+
+function renderTracks() {
+  tracklist.replaceChildren();
+
+  tracks.forEach((track, i) => {
+    const button = document.createElement("button");
+
+    button.type = "button";
+    button.className = "track" + (i === index ? " active" : "");
+    button.setAttribute(
+      "aria-current",
+      i === index ? "true" : "false"
+    );
+
+    const number = document.createElement("span");
+    number.className = "number";
+    number.textContent = String(i + 1).padStart(2, "0");
+
+    const title = document.createElement("span");
+    title.className = "track-title";
+    title.textContent = track.name;
+
+    button.append(number, title);
+
+    button.addEventListener("click", () => {
+      if (i !== index) previousIndex = index;
+      loadTrack(i, true);
+    });
+
+    tracklist.appendChild(button);
+  });
+}
+
+function loadTrack(i, autoplay = true) {
+  index = (i + tracks.length) % tracks.length;
+
+  const request = ++playRequest;
+  const track = tracks[index];
+
+  audio.pause();
+  audio.src = track.url;
+  audio.load();
+
+  nameEl.textContent = track.name;
+  statusEl.textContent = "Carregando música...";
+  playBtn.textContent = "▶";
+
+  progress.value = 0;
+  currentEl.textContent = "00:00";
+  durationEl.textContent = "00:00";
+
+  renderTracks();
+
+  if (autoplay) {
+    audio.play().catch(() => {
+      if (request !== playRequest) return;
+
+      statusEl.textContent =
+        "Não foi possível tocar. Verifique o link ou o formato.";
+    });
+  }
+}
+
+function playNext() {
+  if (repeatOne) {
+    audio.currentTime = 0;
+    audio.play().catch(() => {});
+    return;
+  }
+
+  if (shuffle && tracks.length > 1) {
+    let nextIndex;
+
+    do {
+      nextIndex = Math.floor(Math.random() * tracks.length);
+    } while (nextIndex === index);
+
+    previousIndex = index;
+    loadTrack(nextIndex);
+    return;
+  }
+
+  if (index < tracks.length - 1) {
+    previousIndex = index;
+    loadTrack(index + 1);
+  } else if (continuous) {
+    previousIndex = index;
+    loadTrack(0);
+  } else {
+    audio.pause();
+    audio.currentTime = 0;
+    statusEl.textContent = "Fim da playlist.";
+  }
+}
+
+function playPrevious() {
+  if (audio.currentTime > 3) {
+    audio.currentTime = 0;
+    return;
+  }
+
+  if (shuffle && previousIndex !== -1) {
+    const target = previousIndex;
+    previousIndex = -1;
+    loadTrack(target);
+  } else {
+    previousIndex = index;
+    loadTrack(index - 1);
+  }
+}
+
+document.getElementById("play").addEventListener("click", () => {
+  if (audio.paused) {
+    if (!audio.src) {
+      loadTrack(index, true);
+    } else {
+      audio.play().catch(() => {
+        statusEl.textContent =
+          "Falha ao reproduzir. Verifique o acesso ao arquivo.";
+      });
+    }
+  } else {
+    audio.pause();
+  }
+});
+
+document.getElementById("next")
+  .addEventListener("click", playNext);
+
+document.getElementById("prev")
+  .addEventListener("click", playPrevious);
+
+document.getElementById("shuffle").addEventListener("click", event => {
+  shuffle = !shuffle;
+  event.currentTarget.classList.toggle("active", shuffle);
+
+  statusEl.textContent = shuffle
+    ? "Modo aleatório ativado."
+    : "Reprodução em ordem.";
+});
+
+document.getElementById("continuous").addEventListener("click", event => {
+  continuous = !continuous;
+  event.currentTarget.classList.toggle("active", continuous);
+
+  statusEl.textContent = continuous
+    ? "A playlist será repetida continuamente."
+    : "A playlist termina após a última faixa.";
+});
+
+function toggleRepeat() {
+  repeatOne = !repeatOne;
+
+  document.getElementById("repeatOne")
+    .classList.toggle("active", repeatOne);
+
+  document.getElementById("repeat")
+    .classList.toggle("active", repeatOne);
+
+  statusEl.textContent = repeatOne
+    ? "Repetindo a faixa atual."
+    : "Repetição da faixa desativada.";
+}
+
+document.getElementById("repeat")
+  .addEventListener("click", toggleRepeat);
+
+document.getElementById("repeatOne")
+  .addEventListener("click", toggleRepeat);
+
+audio.addEventListener("play", () => {
+  playBtn.textContent = "Ⅱ";
+  statusEl.textContent = "Reproduzindo.";
+});
+
+audio.addEventListener("pause", () => {
+  playBtn.textContent = "▶";
+
+  if (!audio.ended &&
+      statusEl.textContent === "Reproduzindo.") {
+    statusEl.textContent = "Pausado.";
+  }
+});
+
+audio.addEventListener("waiting", () => {
+  statusEl.textContent = "Carregando áudio...";
+});
+
+audio.addEventListener("playing", () => {
+  statusEl.textContent = "Reproduzindo.";
+});
+
+audio.addEventListener("loadedmetadata", () => {
+  durationEl.textContent = formatTime(audio.duration);
+});
+
+audio.addEventListener("timeupdate", () => {
+  currentEl.textContent = formatTime(audio.currentTime);
+
+  if (Number.isFinite(audio.duration) && audio.duration > 0) {
+    progress.value = audio.currentTime / audio.duration * 100;
+  }
+});
+
+progress.addEventListener("input", () => {
+  if (Number.isFinite(audio.duration) && audio.duration > 0) {
+    audio.currentTime =
+      Number(progress.value) / 100 * audio.duration;
+  }
+});
+
+document.getElementById("volume").addEventListener("input", event => {
+  audio.volume = Number(event.target.value);
+});
+
+audio.addEventListener("ended", playNext);
+
+audio.addEventListener("error", () => {
+  statusEl.textContent =
+    "Erro ao abrir áudio. Verifique o arquivo e o formato suportado.";
+});
+
+audio.volume = 0.8;
+
+renderTracks();
+loadTrack(0, false);
+</script>
+</body>
+</html>
